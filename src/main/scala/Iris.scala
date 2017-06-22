@@ -14,6 +14,9 @@ object IrisSpark {
       .config(conf = conf)
       .appName("spark session example")
       .getOrCreate()
+
+    import sparkSession.implicits._
+
     val path = "/Users/jnachbar/Downloads/iris.csv"
     val data: DataFrame = sparkSession.read
       .option("header","true")
@@ -49,8 +52,16 @@ object IrisSpark {
         .setMetricName("accuracy")
     val accuracy = evaluator.evaluate(preds)
     println("accuracy: " + (accuracy * 100) + "%")
+
+    preds.printSchema()
+    val notDataFrame = data.as[IrisData].rdd
+    println(notDataFrame.map(_.SepalWidth).mean())
+
+    //notDataFrame.map(_.)
     //dataOne.join(dataTwo, dataOne("Name"), "outer")
     //(data.groupBy("Name").mean("SepalWidth", "SepalLength")).show()
 
   }
+
+  case class IrisData(SepalWidth: Double, SepalLength: Double, PetalLength: Double, PetalWidth: Double, Name: String)
 }
