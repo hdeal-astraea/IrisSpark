@@ -11,13 +11,17 @@ import  geotrellis.raster.mapalgebra.local._
 
 object TrellisTest {
   def main(args: Array[String]): Unit = {
-    val path = "/Users/jnachbar/Downloads/LC80160342016111LGN00_B2.TIF"
-    val image = GeoTiffReader.readSingleband(path)
-    val tile = image.tile
+    val path1 = "/Users/jnachbar/Downloads/LC80160342016111LGN00_B2.TIF"
+    val path2 = "/Users/jnachbar/Downloads/LC80160342016111LGN00_BQA.TIF"
+    val tile = GeoTiffReader.readSingleband(path1).tile
+    val qa = GeoTiffReader.readSingleband(path2).tile
     val mean = tile.histogram.mean().get
     val stdev = tile.histogram.statistics().get.stddev
-
-
+    val qaBit = qa.map(value => if(value > 32000) 1 else 0)
+    println(qaBit.histogram.ascii())
+    println(qa.histogram.ascii())
+//    val maskTile: Tile = tile.localMask(qaBit, 1, NODATA)
+//    maskTile.renderPng(ColorRamps.HeatmapBlueToYellowToRedSpectrum).write(s"/Users/jnachbar/Documents/Pictures/no_clouds2.png")
 //    val tiletimes2 = tile * tile + 3
 //    def clip(value: Double, mean: Double, stdev: Int, devs: Int): Unit ={
 //      if(Math.abs(mean - value) > (stdev * devs)) doubleNODATA else value
@@ -25,8 +29,8 @@ object TrellisTest {
 //
 //    }
 
-    val clipTile: Tile = tile.mapDouble(value => if(Math.abs(mean - value) > (stdev * 2)) doubleNODATA else value)
-    println(clipTile.histogram.ascii())
+//    val clipTile: Tile = tile.mapDouble(value => if(Math.abs(mean - value) > (stdev * 1)) doubleNODATA else value)
+//    println(clipTile.histogram.ascii())
 
 
 
