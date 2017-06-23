@@ -7,6 +7,7 @@ import geotrellis.raster.histogram._
 import geotrellis.raster.render.ColorRamps
 import geotrellis.vector.ProjectedExtent
 import org.apache.spark.rdd.RDD
+import Utils._
 
 /**
   * Created by jnachbar on 6/20/17.
@@ -27,8 +28,8 @@ object RasterFun {
 
     //val histo: IntHistogram = FastMapHistogram.fromTile(b2justTile.first())
 
-    val histo = b2.histogramExactInt
-    println(histo.statistics())
+    val histo = b2.histogram()
+    println(histo.ascii())
     //  b2.map(_._2).zipWithIndex.foreach({
     //    case (tile: Tile, index: Long) =>
     //      println(index)
