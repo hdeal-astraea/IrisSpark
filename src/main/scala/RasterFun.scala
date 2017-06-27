@@ -13,6 +13,7 @@ import Utils._
   * Created by jnachbar on 6/20/17.
   */
 object RasterFun {
+
   def main(args: Array[String]): Unit = {
     val sparkSession = SparkSession.builder
       .appName("raster spark")
@@ -28,8 +29,6 @@ object RasterFun {
 
     //val histo: IntHistogram = FastMapHistogram.fromTile(b2justTile.first())
 
-    val histo = b2.histogram()
-    println(histo.ascii())
     //  b2.map(_._2).zipWithIndex.foreach({
     //    case (tile: Tile, index: Long) =>
     //      println(index)
