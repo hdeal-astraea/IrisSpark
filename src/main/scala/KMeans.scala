@@ -30,11 +30,11 @@ object KMeans {
   //add the index of the tile to the output sequence
   //why am I doing this? don't I end up with only one feature vector anyway?
   //maybe for reconstruction
-  def tilesToKeyPx(pe: ProjectedExtent, t1: (Tile), t2: (Tile), t3: (Tile)) = {
+  def tilesToKeyPx(t1: (Tile), t2: (Tile), t3: (Tile)) = {
     for {r <- 0 until t1.rows; c <- 0 until t1.cols}
-        yield(Seq(pe, c, r, t1.get(c, r), t2.get(c, r), t3.get(c, r)))
+        yield(Seq(c, r, t1.get(c, r), t2.get(c, r), t3.get(c, r)))
   }
-  def expandTuple(pe: ProjectedExtent, t: ((Tile, Tile), Tile)) = (pe, t._1._1,  t._1._2, t._2)
+  def expandTuple(t: ((Tile, Tile), Tile)) = (t._1._1,  t._1._2, t._2)
   def main(args: Array[String]): Unit = {
     val conf = new SparkConf().setMaster("local[*]").setAppName("IrisSpark")
     val sparkSession = SparkSession.builder
@@ -45,22 +45,27 @@ object KMeans {
     val blueTIF: RDD[(ProjectedExtent, Tile)] = sc.hadoopGeoTiffRDD("file:///Users/jnachbar/Downloads/LC80160342016111LGN00_B2.TIF")
     val greenTIF: RDD[(ProjectedExtent, Tile)] = sc.hadoopGeoTiffRDD("file:///Users/jnachbar/Downloads/LC80160342016111LGN00_B3.TIF")
     val redTIF : RDD[(ProjectedExtent, Tile)] = sc.hadoopGeoTiffRDD("file:///Users/jnachbar/Downloads/LC80160342016111LGN00_B4.TIF")
+    val blue: RDD[Tile] = blueTIF.map(_._2)
+    val green: RDD[Tile] = greenTIF.map(_._2)
+    val red: RDD[Tile] = redTIF.map(_._2)
 
-    val peRDD = (blueTIF join greenTIF join redTIF)
-    val expandRDD = peRDD.mapValues{
+
+    val peRDD = (blue.zip(green).zip(red))
+    val expandRDD = peRDD.map{
       case((t1,t2),t3) => (t1, t2, t3)
     }
 
-    val seqRDD = expandRDD.map(value => tilesToKeyPx(value._1, value._2._1, value._2._2, value._2._3))
+    val seqRDD = expandRDD.map(value => tilesToKeyPx(value._1, value._2, value._3))
 
     val schemaString = "Projected Col Row Tile1 Tile2 Tile3"
-    val labels = schemaString.split(" ").map(name => StructField(name, types.DoubleType, nullable = true))
+    val labels = schemaString.split(" ").map(name => StructField(name, types.IntegerType, nullable = true))
     val schema = StructType(labels)
     val rowRDD = seqRDD.map(sequence => Row(sequence.head.apply(0), sequence.head.apply(1), sequence.head.apply(2), sequence.head.apply(3),
       sequence.head.apply(4), sequence.head.apply(5)))
     val rawData = sparkSession.createDataFrame(rowRDD, schema)
-    rawData.printSchema()
     rawData.show(5)
+
+
 
 
     //create function to explode tiles into pixel/key pairs
